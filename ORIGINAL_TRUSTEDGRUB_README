@@ -1,0 +1,423 @@
+== Content ==
+
+1 TrustedGRUB Quick Installation Guide
+1.1 Download from Sourceforge
+
+2 Trusted GRUB
+2.1 Introduction
+2.2 Authors
+2.3 Features
+2.4 Measurements (in short)
+2.5 Requirements
+2.6 Known Bugs
+2.7 Installation of TrustedGRUB, general steps
+2.8 Additional Compile Options
+2.9 Installation of TrustedGRUB, installing the bootloader
+
+3 New TrustedGRUB Commands
+3.1 Password check
+3.2 Checkfile
+3.3 sha1
+
+4 New TrustedGRUB Utilities
+4.1 util/create_sha1
+4.2 util/verify_pcr
+
+5 General Information
+5.1 General view on how TrustedGRUB works
+5.2 Additional memory in use
+5.3 Modifications in stage1.S
+5.4 Modifications in start.S
+5.5 Modifications in start_eltorito.S
+5.6 Other modifications
+5.7 File list
+
+== 1. TrustedGRUB Quick Installation Guide ==
+=== 1.1 Download from Sourceforge ===
+[:http://sourceforge.net/projects/trustedgrub]
+
+ # tar -xzf TrustedGRUB-<ver>.tgz
+ # cd TrustedGRUB-<ver>
+ # ./build_tgrub.sh
+
+Follow the installation instructions printed by the script.
+
+== 2. Trusted GRUB ==
+
+=== 2.1 Introduction ===
+
+This file describes the extensions necessary to transform a standard GRUB into
+a version that offers TCG support for granting the integrity of the boot
+process.
+This is done by measuring all critical components during the boot process,
+i.e., stage2 of GRUB, the OS kernel or OS modules, together with their
+parameters. Please note that stage1 has not to be checked here (it wouldn't
+even be possible), because it has already been measured by the TCG extension
+itself.
+Since the TCG extensions are passive, it has no direct ability to check if
+the bootloader (and the OS kernel/modules) actually is correct, this can only
+be done indirectly by using the seal/unseal functions of the TCG chip (for
+details on this topic, you should have a look at the TCG specifications or
+on other documents describing TCG abilities).
+
+=== 2.2 Authors ===
+
+The Trusted GRUB extensions have been performed by
+
+Marcel Selhorst  <m.selhorst@sirrix.com>, Sirrix AG security technologies, Bochum
+Christian Stueble <c.stueble@sirrix.com>,  Sirrix AG security technologies, Bochum
+Oliver Altmeyer  <oaltmeyer@aol.com>,  Saarland University, Saarbrücken
+
+The Microkernel patch is from Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+The OpenBSD patches are from Genua <http://www.genua.de/>
+
+=== 2.3 Features ===
+
+* Updated to latest GRUB Release 0.9.7
+* Including password dialog support
+* Including patches for running L4 microkernels (e.g., fiasco)
+* New Software-SHA1-implementation
+* Improved checkfile option with software measurements
+* TPM Support with TPM detection
+* TPM hashing improvements
+* New "sha1"-commandline utility
+* New "verify_pcr" utility to verify the correctness of GRUB
+* New "create_sha1" utility
+* NTFS-read support
+* Ext4 support
+* OpenBSD support
+
+=== 2.4 Measurements (in short) ===
+
+* PCR 4 contains MBR information and stage1
+* PCR 8 contains bootloader information stage2 part1
+* PCR 9 contains bootloader information stage2 part2
+* PCR 12 contains all commandline arguments from menu.lst and those entered in the shell
+* PCR 13 contains all files checked via the checkfile-routine
+* PCR 14 contains all files which are actually loaded (e.g., Linux kernel, initrd, modules...)
+
+NOTE: In case you booted via a CD-image, PCR-8 will be empty and PCR-9 will contain
+      the whole measurement of the stage2_eltorito-boot-image.
+
+=== 2.5 Requirements ===
+
+In order to install the TCG-enhanced TrustedGRUB, you need
+* Some Linux tools (patch, aclocal, automake, make, gcc 3.x or gcc 4.x)
+* A computer which has TCG enhancements according to TCG specs. v1.1b / v1.2, since SHA1-calculations are extended into PC-Registers of the TPM.
+
+'''Note:''' You can use Trusted GRUB without a TPM chip, since the SHA1-calculation is done
+in software now, you can use all the functions provided by Trusted GRUB (e.g., checkfile...),
+but you will have no storage for these values and therefore afterwards no possibility to
+verify the integrity.
+
+=== 2.6 Known Bugs ===
+
+* On some TPM-Bios implementations, Trusted GRUB does not run if the TPM is disabled in the BIOS. This has occured only on IBM Thinkpad T41p, yet.
+* On some HP notebook machines, Trusted GRUB is not able to extend the PCRs of the TPM due to a missing feature "TCG_PASS_THROUGH_TO_TPM" inside the 
+BIOS.
+
+If you find any bugs, please contact
+the author Marcel Selhorst <m.selhorst@sirrix.com>
+
+=== 2.7 Installation of TrustedGRUB, general steps ===
+
+To compile and install TrustedGRUB, please run
+
+ #   ./build_tgrub.sh
+
+Additional parameters for the build_tgrub-script can be listed with
+
+ #   ./build_tgrub.sh --help
+
+and as root:
+
+ #   make install
+
+Furthermore, please make sure, to copy the file "default", which comes with this package, into
+the directory, where your "menu.lst" is.
+NOTE: Please make sure, that no *1_5-files are in your /boot/grub-directory. The only valid
+files in there are stage1, stage2, default, menu.lst / grub.conf.
+
+
+=== 2.8 Additional Compile Options ===
+
+Trusted GRUB has three modes of operations (selectable only before compilation!)
+
+1) Normal mode:
+    simply compile and TrustedGRUB runs silently
+
+2) Debug mode:
+    compiles additional debug information into Trusted GRUB.
+
+3) SHA1 mode:
+    compiles addition runtime SHA1-information into Trusted GRUB.
+    During the boot process, Trusted GRUB will show the measured SHA1-result
+    for every measured file loaded
+
+To select mode 2 or mode 3, edit the file stage2/Makefile.am and look for the
+line
+
+    # tGRUB: add -DDEBUG or -DSHOW_SHA1
+    STAGE2_CFLAGS = $(INCLUDES)
+
+For mode 2) replace the line with
+
+    STAGE2_CFLAGS = $(INCLUDES) -DDEBUG
+
+For mode 3) replace the line with
+
+    STAGE2_CFLAGS = $(INCLUDES) -DSHOW_SHA1
+
+'''Note:''' Please do not compile -DDEBUG and -DSHOW_SHA1 together, since the
+resulting output displayed will interfere. You can also use the build-script to
+specify these parameters.
+
+=== 2.9 Installation of TrustedGRUB, installing the bootloader ===
+
+ # rm /boot/grub/stage*
+ # rm /boot/grub/*1_5
+ # cp stage1/stage1 /boot/grub
+ # cp stage2/stage2 /boot/grub
+ # ./grub/grub
+ #       root (hdX,Y) // Your boot partition
+ #       setup (hdX)  // Your harddisc where to install Trusted GRUB
+ #       quit
+
+If that fails (on some HP notebooks), just use the grub-install-utility under util
+
+ # cd util
+ # chmod a+x grub-install
+ # grub-install /dev/hdX
+
+== 3. New TrustedGRUB Commands ==
+
+=== 3.1 Password check ===
+
+GRUB has been extended to ask the user for a password by appending the parameter
+"--with-password-dialog" to a module. GRUB will then prompt for a password
+and will replace the original parameter with "password=<yourpassword>".
+This is needful for some microkernel based projects in order to do pre-boot
+authentication.
+
+=== 3.2 Checkfile ===
+
+The syntax of checkfile is as follows:
+
+   checkfile (hd?,?)/somewhere/check.file
+
+Pay attention that the drive parameter (hd?,?) and the path are correct, if
+they are not, TrustedGRUB is not able to boot!
+The check file itself contains a list of tuples of arbitrary length (but the
+check file MUST NOT be larger than 8096 Bytes) with a well-defined syntax, as
+follows:
+   fedb1cff009e115f7f5f7b4533667a787798832d (hd0,1)/test1.file
+   485214eab2de87284de9d4e323e428bf60e0aa77 (hd0,1)/grub-0.92.tar.bz2
+   a6e171e989849dd44735a513c4270a0837c09174 (hd0,1)/test2.file
+The first component is a 40 byte alphanumeric value, which marks the SHA1 hash
+value of the succeeding file (the value can be created by either "sha1sum" under
+Linux or the program create_sha1, which comes with this distribution), followed
+by a single white space character.
+The second component has to be the absolute path (together with the
+drive reference) of the file corresponding to the hash value, followed by a
+new line character ('\n').
+Please make sure that the syntax of your check file is absolutely correct (do
+NOT forget the newline character at the end of the last entry), otherwise
+TrustedGRUB is not able to boot.
+The integrity of all files listed in this check file is checked when your
+system is booted by comparing the referenced hash values to newly computed
+ones. If some of the values do not match, a warning is displayed, leaving you
+the choice of either continue booting a maybe contaminated system or stopping
+the boot process.
+All files, which are checked via the checkfile-option are extended into PCR 13.
+
+=== 3.3 sha1 ===
+
+The syntax of sha1 is as follows:
+
+    sha1 (hd?,?)/somewhere/hash/my/file
+
+This command line utility simply measures the SHA1 hash of the given file and prints
+the result.
+
+== 4. New TrustedGRUB Utilities==
+
+=== 4.1 util/create_sha1 ===
+
+Together with the TrustedGRUB files, the archive that you have downloaded contains a
+file called create_sha1.c. It will be compiled and stored in grub-0.97/util.
+The task of this program is to support the usage of TrustedGRUB's checkfile option,
+by creating a SHA1 hash value whose format is the same as the function
+load_checkfile (within the file boot.c) uses.
+In order to use this program, you should execute it with
+
+ Usage: ./util/create_sha1 {filename}
+
+The resulting hash value is displayed on the screen, copy this string (together
+with the complete file name) to your check file (as described before).
+'''Note:''' Since we perform regular SHA1 here, you can also use the Linux tool
+"sha1sum" for this calculation
+
+=== 4.2 util/verify_pcr ===
+
+The "verify_pcr"-tool is intended to check, if a PCR register is extended correctly
+with the given files. For example, if you have a checkfile containing 5 entries,
+all the files are hashed and extended into PCR 13. The corresponding value of PCR13
+can be verified with this utility. Execute the command with the following parameters:
+
+ Usage: ./util/verify_pcr  <pcr initial value {NULL | 20 byte hex}> {filenames-1 ... filenames-n}
+
+ Example: All files which are actually loaded are hashed and extended into PCR 14.
+
+If you boot your Linux, this PCR would contain the Linux kernel (and probably initrd-files).
+In order to check if the result is correct, use:
+
+ # ./util/verify_pcr NULL /boot/vmlinuz
+ *******************************************************************************
+ * Result for PCR: d0 df 5b 82 c2 a8 1a ac 17 0e ff 80 fa 79 fb d2 f2 3e 17 01 *
+ *******************************************************************************
+
+which will display the value, which has to be in your PCR. You can then check the
+according value with
+
+ # cat /sys/class/misc/tpm0/device/pcrs | grep PCR-14
+ PCR-14: D0 DF 5B 82 C2 A8 1A AC 17 0E FF 80 FA 79 FB D2 F2 3E 17 01
+
+'''Note:''' Be sure to give the correct order of your files as they are listed in your menu.lst.
+Otherwise the result will not be correct.
+
+
+Update:
+-------
+The Verification of the commandline-parameters (as loaded through the menu.lst)
+as well as those entered via the bash-like command console are measured into PCR 12.
+Since GRUB parses those commands and replaces tabs into 2 spaces, make sure to append
+those changes to your references as well in order to come up with the same hash value.
+It is planned to write a utility, which will perform the exact GRUB parsing and to
+calculate the resulting hash in the PCR for you in near future.
+
+== 5. General Information ==
+
+=== 5.1 General view on how TrustedGRUB works ===
+
+The goal of TrustedGRUB is to install a chain of trust, i.e., every component
+measures the integrity of the succeeding component. Concretely, this looks like
+the following ("<-" means "is checked by"):
+   BIOS integrity        <-  TCG extension
+   GRUB stage1           <-  TCG extension
+   start of GRUB stage2  <-  GRUB stage1
+   rest of GRUB stage2   <-  file start.S as part of GRUB stage2
+   OS kernel (modules)   <-  file boot.c as part of GRUB stage2
+This chain of trust can be extended by making GRUB stage2 able to measure the
+integrity of arbitrary files. This is done by a newly added command named
+checkfile which can either be used within the file menu.lst or via the GRUB
+interface during the boot process.
+
+
+=== 5.2 Additional memory in use ===
+
+TrustedGRUB needs some extra memory space compared to GRUB, because it has to create
+a segment for TCG (within files stage1.S, start.S and asm.S). Within the file
+asm.S, this segment is also used to store data which have to be transmitted
+when switching between protected and real mode.
+The (additional) memory regions in use are
+   (stage1.S) 0x80000 - 0x800?? ... TCG segment
+   (start.S)  0x80000 - 0x800?? ... TCG segment
+   (asm.S)    0x80000 - 0x8F0?? ... TCG segment and data storage
+
+
+=== 5.3 Modifications in stage1.S ===
+
+Stage1 has the task to check the integrity of stage2. Because it only loads
+the first sector of stage2, it is only able to check this small piece of
+code.
+In order to perform this task, stage1 is extended in a way that it uses
+two functions provided by the TCG chip:
+
+  1.) The code of (the first sector) of stage2 is hashed with a SHA-1
+      algorithm. The starting address of the code is 0x8000, its length is
+      512 bytes.
+  2.) The resulting hash value is written to PCR (Platform Configuration
+      Register) 8. More precisely, the former content of this register (which
+      actually is 0) is concatenated to the new value, then hashed with SHA1
+      and finally written again to PCR 8.
+Due to the PC architecture, the size of the boot sector (where stage1 is
+located) is limited to 512 bytes. But the original stage1 is already very
+close to this limit, leaving very few space for the TCG extensions. Because
+of this, it was necessary (in the current version of TrustedGRUB) to eliminate the CHS-
+code. This results in the problem that we support only LBA-discs now.
+
+
+=== 5.4 Modifications in start.S ===
+
+start.S contains the code for the first sector of GRUB's stage2. Its only task
+is to load of stage2. Therefore, the TCG extension now has to measure the
+rest of stage2.
+The changes here are widely the same as in stage1, with the differences that
+the entry point for the code which has to be checked is a address 0x8200 and
+that the result is written into PCR 9.
+
+=== 5.5 Modifications in start_eltorito.S ===
+
+When booting TrustedGRUB from a CD-ROM, the bootloader is not splitted into
+several stages. Instead, there exists one large file "stage2_eltorito" containing 
+both stages of TrustedGRUB. 
+In order to measure TrustedGRUB, start_eltorito.S has
+been extended in a way, that it measures the whole stage2_eltorito-image and
+extends the result into PCR 9.
+
+'''Note:''' When booting from CD, the content of PCR 8 is empty, since the whole
+bootloader is measured at once into PCR 9.
+
+=== 5.6 Other modifications ===
+
+All modifications have been commented with
+    /* BEGIN TCG EXTENSION */
+              ...
+    /* END TCG EXTENSION */
+
+Mainly, in "stage2/disc_io.c" the functions grub_open, grub_read and grub_close have been
+extended to do the SHA1-measurement during the loadage of files. In detail:
+
+    grub_open  --> sha1_init
+    grub_read  --> sha1_update
+    grub_close --> sha1_finish
+
+The SHA1-functions are placed in a separate file stage2/sha1.c.
+Furthermore, the file "boot.c" contains the new features "calculate_sha1", "update_pcr"
+and all loading parts have been modified to correctly load the files and calculate
+the corresponding SHA1-value.
+
+"stage2/cmdline.c" contains the new measurements of all commandline-parameters
+
+"stage2/builtins.c" contains the new command line utilities "checkfile" and "sha1"
+
+"stage2/stage2.c" has been extended to check for a TPM and to activate the SHA1-measurements
+
+"stage2/asm.S" contains the Assembler-routines needed for communication with the TPM
+
+"stage2/Makefile.am" had to be modified, since we had to add our sha1-function for compiling
+
+=== 5.7 File list ===
+
+The following list presents the files that have been modified to add TCG
+support to GRUB. For details on the modifications see sections below.
+
+  - grub-0.97/stage1/stage1.S
+  - grub-0.97/stage1/tgrub.h
+  - grub-0.97/stage2/asm.S
+  - grub-0.97/stage2/boot.c
+  - grub-0.97/stage2/builtins.c
+  - grub-0.97/stage2/char_io.c
+  - grub-0.97/stage2/cmdline.c
+  - grub-0.97/stage2/common.c
+  - grub-0.97/stage2/disk_io.c
+  - grub-0.97/stage2/Makefile.am
+  - grub-0.97/stage2/sha1.c
+  - grub-0.97/stage2/shared.h
+  - grub-0.97/stage2/stage2.c
+  - grub-0.97/stage2/start.S
+  - grub-0.97/stage2/start_eltorito.S
+  - grub-0.97/grub/asmstub.c
+  - grub-0.97/util/create_sha1.c
+  - grub-0.97/util/verify_pcr.c
+  - grub-0.97/util/sha1.c

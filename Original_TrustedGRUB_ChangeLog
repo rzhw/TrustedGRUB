@@ -1,0 +1,166 @@
+This file describes the changes between different versions of TrustedGRUB.
+
+/* TrustedGRUB v1.1.5 */
+  - Added OpenBSD and FreeBSD patches from http://sourceforge.net/projects/bsssd
+  - Fixed kernel loading from command line
+  - Fixed counter variable in stage2
+
+/* TrustedGRUB v1.1.4 */
+
+  - Ext4 support
+  - Applied the following GNU GRUB patches from Gentoo repository to TrustedGRUB:
+    - 008_all_grub-0.97-AM_PROG_AS.patch
+    - 110_all_grub-0.97-ptable-fix.patch
+    - 550_all_grub-0.97-long-commandline.patch
+    - 700_all_grub-0.97-grub-install_addsyncs.patch
+    - 710_all_grub-0.97-grub-install_regexp.patch
+    - 720_all_grub-0.97-grub-install_aoe_support.patch
+    - 800_all_grub-0.97-crossreference_manpages.patch
+    - 810_all_grub-0.97-ext3_256byte_inode.patch
+    - 822_all_grub-0.97-geometry-26kernel.patch
+    - 850_all_grub-0.97_ext4.patch
+  - Fixed compile issue on Debian-based systems
+    - (GRUB requires a working absolute objcopy; upgrade your binutils)
+    - (__stack_chk_fail)
+  - Fixed make check
+  - Hardcoded stage2 start address in stage1.S
+  - Added new VESA3 support (new commands vbeset, vbeprobe, vbematch)
+
+/* TrustedGRUB v1.1.3 */
+
+  - Support for Linux versions 2.6.23 and above
+  - Improved Checkfile-output
+
+/* TrustedGRUB v1.1.2 */
+
+  - GCC-4 compilation support
+
+/* TrustedGRUB v1.1.0 */
+
+  - fixed the measurement-process of arbitrary kernels (e.g., XEN)
+  - fixed some output, when "-DSHOW_SHA1" is set
+  - fixed some minors and added some options in the "build_TrustedGRUB"-script
+
+/* TrustedGRUB v1.0.1 */
+
+  - added cmdline-measurement into PCR12
+  - fixed PCR-update for stage2_eltorito-images
+  - added GCC-version verification in build_TrustedGRUB.sh
+
+/* TrustedGRUB v1.0-rc5-ntfs */
+
+  - added NTFS-read patch
+
+/* TrustedGRUB v1.0-rc5 */
+
+  - corrected PCR-update mechanism for TPM 1.2 BIOS implementations
+  - "savedefault": excluded from measurement
+  - beauty corrections
+
+/* TrustedGRUB v1.0-rc4 */
+
+  - Updated to latest GRUB Release 0.9.7
+  - Including password dialog support
+  - Including patches for running L4 microkernels (e.g., L4 fiasco)
+  - New Software-SHA1-implementation
+  - Improved checkfile option with software measurements
+  - TPM Support with TPM detection
+  - TPM hashing improvements
+  - New "sha1"-commandline utility
+  - New "verify_pcr" utility to verify the correctness of Trusted GRUB
+  - New "create_sha1" utility
+
+/* TrustedGRUB v0.8.1 */
+
+  - corrected some minor (not security critical) bugs in the TrustedGRUB
+    enhancements. Thanks to Marko Wolf for recognizing them in the source 
+    code
+  - the comments within TrustedGRUB's source code have been extended, especially
+    in the load_checkfile function
+  - the file README.TrustedGRUB has been slightly modified
+  - corrected a bug in (original) GRUB which could lead to problems during
+    compilation (wrong data type within the file fsys_reiserfs.c)
+
+
+/* TrustedGRUB v0.8 */
+
+  - TrustedGRUB's measurement unit has been completely redisgned. Instead of loading
+    components (as the kernel) twice, it is now loaded only once, thus
+    preventing a race condition which could be used for attack purposes.
+    Thanks to Bernhard Kauer for presenting us the security leak which was
+    present in previous version.
+  - in order to reach the security improvements described above, 2 new
+    functions (TrustedGRUB_open and TrustedGRUB_read) have been added to the file 
+    disk_io.c
+
+
+/* TrustedGRUB v0.7.1 */
+
+  - TrustedGRUB now uses different PCRs (10 and 11) for storing hash values of
+    operating system components (as, e.g., kernel, modules) and hash values
+    of the check file and the files listed in it
+  - added a file BUGS.TrustedGRUB
+
+
+/* TrustedGRUB v0.7 */
+
+  - instead of transferring single bytes to the TCG chip, TrustedGRUB is now able to
+    uses larger areas of memory instead (more efficient)
+  - MD5 hash algorithm not necessary any more; everything is hashed via the
+    TCG extension
+  - for easy creation of reference hash values, a program named create_sha1 has
+    been added
+
+
+/* TrustedGRUB v0.6 */
+
+  - TrustedGRUB now able to check integrity of arbitrary files
+  - integrity of commands now guaranteed
+  - changes for TCG segment: is now 0x8000 (i.e., address 0x80000) for all
+    components
+  - patches included for easily transforming an original GRUB into TrustedGRUB
+
+	
+/* TrustedGRUB v0.5 */
+
+  - fixed major bug in file asm.S (values have not been correctly measured)
+  - minimal corrections in README file
+	
+
+/* TrustedGRUB v0.4.1 */
+
+  - corrected some minor bug within file stage1.S	
+  - README file updated
+  - renamed HISTORY to ChangeLog (this file)
+	
+
+/* TrustedGRUB v0.4 */
+
+  - binary versions included (both for hard and floppy drives)
+  - original source code of stage1 included again (as commentary)
+  - README file updated
+  - HISTORY file added
+
+
+/* TrustedGRUB v0.3 */
+
+  - hard drive support added
+  - README file updated
+
+
+/* TrustedGRUB v0.2.1 */
+
+  - initrd (initial ramdisk) is now also measured
+
+
+/* TrustedGRUB v0.2 */
+
+  - start.S now dynamically computes size of the rest of stage2 instead of
+    using a fixed value
+
+
+/* TrustedGRUB v0.1 */
+
+  - initial version
+  - full functionality (chain of trust is complete) 
+  - supports floppy disks
