@@ -1,3 +1,86 @@
+
+  This is a fork of TrustedGRUB 1.1.5
+
+
+  TrustedGRUB is a modified version of GRUB Legacy (1.0) that will
+extend the chain of trust in the TPM by measuring the boot loader code,
+the boot settings, the loaded kernel and the initial RAM disk image
+used during the boot process.
+
+
+  The original source of the code can be found at:
+http://sourceforge.net/projects/trustedgrub/files/TrustedGRUB-1.1.5/
+  Unfortunately, the project doesn't seem to be actively maintained anymore
+(last update was in 2010).
+
+
+Reasons for the fork:
+
+  - The original project in not actively maintained anymore.
+  - It doesn't build with the latest autoconf/automake tools.
+  - The documentation is lacking.
+  - Github is a nicer place for continuing development.
+
+
+Notes about installation:
+
+  The chain of trust is only extended by stage1 and stage2. TrustedGRUB doesn't
+have stage 1.5 support for extending the chain of measurements in the PCRs.
+  If we don't embed stage1.5 in the drive, stage1 will need to have embeded in it
+the absolute sector of stage2. This will make the measurement of stage1 differ
+at each installation. Also, grub will patch the stage1 code depending on
+the BIOS version detected on the machine.
+
+  To keep the measurements consistent, I suggest another installation aproach:
+newer disk partitioning tools leave 1 MB of unused space at the front of the drive,
+instead of the previous standard of 32 KB, so we can embed the entire stage2 there. 
+  The script 'trustedgrub_install.sh' implements this method.
+
+  Installation instructions:
+    - Copy the files bin/* and trustedgrub_install.sh into /boot/grub/
+    - Partition the disk with a tool that leaves 1 MB of empty space at the beggining of the disk.
+    - Configure your boot settings in the menu.lst file.
+    - Execute '/boot/grub/trustedgrub_install.sh /dev/XXX'
+
+
+Original installation instructions:
+
+  If you want to use the original setup method, be sure to delete stage1.5 first.
+
+  Please do:
+    'cp default /boot/grub'
+    'make install'
+
+  To install TrustedGRUB to your local harddisc do:
+    'rm -rf /boot/grub/stage*'
+    'rm -rf /boot/grub/*1_5'
+    'cp default /boot/grub'
+    'cp stage1/stage1 /boot/grub'
+    'cp stage2/stage2 /boot/grub'
+    './grub/grub --no-floppy'
+  Then enter:
+    'root (hdX,Y)'
+    'setup (hdX)'
+    'quit'
+  or alternatively:
+    'rm -rf /boot/grub/stage*'
+    'rm -rf /boot/grub/*1_5'
+    'util/grub-install /dev/XXX --no-floppy'
+
+
+PCRs measurements:
+
+  PCR 04: "Calling INT 19h", separator event, "Returned INT 19h", first 440 bytes of stage1/first sector.
+  PCR 05: Separator event, last 72 bytes of stage1/first sector that contain the partition table.
+  PCR 08: First 512 bytes of stage2.
+  PCR 09: All of stage2 code without first 512 bytes.
+  PCR 12: Executed commands from menu.lst (root, kernel, initrd, boot).
+  PCR 13: 'checkfile' option checked files.
+  PCR 14: Loaded files (kernel and initrd image).
+
+
+Original README file contents follows:
+
 This is GNU GRUB, the GRand Unified Bootloader.  GRUB is intended to
 provide important bootloader features that are missing from typical
 personal computer BIOSes:
