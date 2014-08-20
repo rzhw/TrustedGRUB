@@ -1,0 +1,7 @@
+    for (i=0; i<22; i++)
+    {
+	if (grub_cmdline[i])
+	    printf("%c",grub_cmdline[i]);
+	else
+	    break;
+    }

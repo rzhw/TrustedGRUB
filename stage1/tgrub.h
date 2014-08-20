@@ -1,0 +1,1 @@
+#define TGRUB_HDD
