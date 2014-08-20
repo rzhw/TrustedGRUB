@@ -1,0 +1,8 @@
+default 0
+# sample boot settings
+timeout 5
+title           Linux
+root            (hd0,0)
+kernel          /vmlinuz root=/dev/sda ro
+initrd          /initrd.img
+boot

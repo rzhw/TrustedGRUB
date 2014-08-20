@@ -22,6 +22,9 @@ Reasons for the fork:
   - Github is a nicer place for continuing development.
 
 
+Use the 'build.sh' script to configure and build the project.
+
+
 Notes about installation:
 
   The chain of trust is only extended by stage1 and stage2. TrustedGRUB doesn't
@@ -37,7 +40,7 @@ instead of the previous standard of 32 KB, so we can embed the entire stage2 the
   The script 'trustedgrub_install.sh' implements this method.
 
   Installation instructions:
-    - Copy the files bin/* and trustedgrub_install.sh into /boot/grub/
+    - Copy the files from bin/ into /boot/grub/
     - Partition the disk with a tool that leaves 1 MB of empty space at the beggining of the disk.
     - Configure your boot settings in the menu.lst file.
     - Execute '/boot/grub/trustedgrub_install.sh /dev/XXX'

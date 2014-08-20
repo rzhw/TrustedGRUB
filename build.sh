@@ -98,7 +98,8 @@ if [ "$BUILD" == "1" ] ; then
     cp stage1/stage1 bin/
     cp stage2/stage2 bin/
     cp grub/grub bin/
-    cp default bin/menu.lst
+    cp menu.lst bin/
+    cp trustedgrub_install.sh bin/
 fi
 
 echo "- Done!"
