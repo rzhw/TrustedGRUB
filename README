@@ -16,13 +16,16 @@ http://sourceforge.net/projects/trustedgrub/files/TrustedGRUB-1.1.5/
 
 Reasons for the fork:
 
-  - The original project in not actively maintained anymore.
+  - The original project is not actively maintained anymore.
   - It doesn't build with the latest autoconf/automake tools.
   - The documentation is somewhat lacking.
+  - The installation wasn't producing consistent measurements.
   - Github is a nicer place for continuing development.
 
 
 Use the 'build.sh' script to configure and build the project.
+Refer to the file ORIGINAL_TRUSTEDGRUB_README for additional information.
+Original source code archive preserved in TrustedGRUB-1.1.5.tar.gz.
 
 
 Notes about installation:
@@ -39,11 +42,12 @@ newer disk partitioning tools leave 1 MB of unused space at the front of the dri
 instead of the previous standard of 32 KB, so we can embed the entire stage2 there. 
   The script 'trustedgrub_install.sh' implements this method.
 
-  Installation instructions:
-    - Copy the files from bin/ into /boot/grub/
-    - Partition the disk with a tool that leaves 1 MB of empty space at the beggining of the disk.
-    - Configure your boot settings in the menu.lst file.
-    - Execute '/boot/grub/trustedgrub_install.sh /dev/XXX'
+
+Installation instructions:
+  - Copy the files from bin/ into /boot/grub/
+  - Partition the disk with a tool that leaves 1 MB of empty space at the beggining of the disk.
+  - Configure your boot settings in the menu.lst file.
+  - Execute '/boot/grub/trustedgrub_install.sh /dev/XXX'
 
 
 Original installation instructions:
@@ -80,3 +84,15 @@ PCRs measurements:
   PCR 12: Executed commands from menu.lst (root, kernel, initrd, boot).
   PCR 13: 'checkfile' option checked files.
   PCR 14: Loaded files (kernel and initrd image).
+
+
+Changes:
+
+28/09/2014:
+  - Renamed GRUB's 'README' file to 'ORIGINAL_GRUB_README'.
+  - Renamed GRUB's 'ChangeLog' file to 'Original_GRUB_ChangeLog'.
+  - Renamed TrustedGRUB's 'README' file to 'ORIGINAL_TRUSTEDGRUB_README'.
+  - Renamed TrustedGRUB's 'ChangeLog' file to 'Original_TrustedGRUB_ChangeLog'.
+  - Renamed TrustedGRUB build script from 'build_tgrub.sh' to 'build.sh'
+  - Updated project to work with the latest autoconf/automake.
+  - Updated build script to create the consistent measurements installation binaries.
