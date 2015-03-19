@@ -24,6 +24,7 @@ Reasons for the fork:
 
 
 Use the 'build.sh' script to configure and build the project.
+Use the '-v' option to enable verbose output.
 Refer to the file ORIGINAL_TRUSTEDGRUB_README for additional information.
 Original source code archive preserved in TrustedGRUB-1.1.5.tar.gz.
 
@@ -90,9 +91,7 @@ Changes:
 
 28/09/2014:
   - Renamed GRUB's 'README' file to 'ORIGINAL_GRUB_README'.
-  - Renamed GRUB's 'ChangeLog' file to 'Original_GRUB_ChangeLog'.
   - Renamed TrustedGRUB's 'README' file to 'ORIGINAL_TRUSTEDGRUB_README'.
-  - Renamed TrustedGRUB's 'ChangeLog' file to 'Original_TrustedGRUB_ChangeLog'.
   - Renamed TrustedGRUB build script from 'build_tgrub.sh' to 'build.sh'
   - Updated project to work with the latest autoconf/automake.
   - Updated build script to create the consistent measurements installation binaries.
