@@ -17,7 +17,7 @@ configure_tgrub()
         if [ $? != 0 ]; then exit 501; fi
         autoconf >& $VERBOSE
         if [ $? != 0 ]; then exit 502; fi
-        automake >& $VERBOSE
+        automake --add-missing >& $VERBOSE
         if [ $? != 0 ]; then exit 503; fi
         if [[ $SHOWSHA1 ]] ; then
             ./configure CFLAGS="-DSHOW_SHA1" >& $VERBOSE
